@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name, verificationCode } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -25,6 +25,38 @@ export async function POST(request: Request) {
     if (!email.includes("@")) {
       return NextResponse.json(
         { error: "邮箱格式不正确" },
+        { status: 400 }
+      );
+    }
+
+    // 验证验证码
+    if (!verificationCode) {
+      return NextResponse.json(
+        { error: "请输入验证码" },
+        { status: 400 }
+      );
+    }
+
+    // 查找有效的验证码
+    // 使用当前 UTC 时间进行比较，确保时区一致性
+    const now = new Date();
+    const validCode = await db.emailVerificationCode.findFirst({
+      where: {
+        email,
+        code: verificationCode,
+        used: false,
+        expiresAt: {
+          gt: now,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    if (!validCode) {
+      return NextResponse.json(
+        { error: "验证码无效或已过期，请重新获取" },
         { status: 400 }
       );
     }
@@ -53,14 +85,28 @@ export async function POST(request: Request) {
 
     let user;
     try {
-      user = await db.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          name: name || null,
-          emailVerified: null,
-        },
+      // 使用事务确保用户创建和验证码标记为已使用同时完成
+      const result = await db.$transaction(async (tx) => {
+        // 创建用户
+        const newUser = await tx.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            name: name || null,
+            emailVerified: new Date(), // 验证码验证通过，标记邮箱已验证
+          },
+        });
+
+        // 标记验证码为已使用
+        await tx.emailVerificationCode.update({
+          where: { id: validCode.id },
+          data: { used: true },
+        });
+
+        return newUser;
       });
+
+      user = result;
     } catch (createError: any) {
       console.error("创建用户失败:", createError);
       
