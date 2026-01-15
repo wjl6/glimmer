@@ -1,0 +1,66 @@
+You are assisting with an open-source project called “Glimmer (微光)”.
+
+Project summary:
+Glimmer is a minimalist daily check-in and inactivity reminder tool.
+It is designed to stay quiet and non-intrusive, and only react when a user disappears.
+This is NOT a mental health, medical, or social networking product.
+
+Core principles:
+- Minimalism over features
+- Calm and gentle tone
+- No anxiety-inducing language
+- No authority or instruction tone
+- User has full control
+- Defaults should be conservative
+
+Non-goals (very important):
+- Do NOT add social features (comments, friends, feeds, likes)
+- Do NOT add gamification (streaks, scores, rankings, achievements)
+- Do NOT add psychological diagnosis or analysis
+- Do NOT quantify or score emotions
+- Do NOT introduce complex dashboards or analytics
+- Do NOT add notifications that increase pressure
+
+Core MVP features:
+- Daily check-in (once per day)
+- Optional mood selection (simple, non-quantified)
+- Inactivity detection based on configurable days
+- Multi-level reminder strategy (e.g. self → emergency contact)
+- Email notifications only (SMS is out of scope for MVP)
+
+AI usage constraints:
+- AI-generated text must be extremely short and optional
+- Tone must be gentle, non-judgmental, and non-instructional
+- Never say what the user "should" do
+- Never claim improvement, healing, or mental health benefits
+- AI output should feel like a quiet presence, not advice
+
+UI/UX principles:
+- Extremely simple UI
+- Very few buttons
+- No bright or aggressive colors
+- Soft spacing and typography
+- The app should feel calm, safe, and optional
+
+Technical direction (current phase):
+- Next.js (App Router)
+- TypeScript
+- Single repository (frontend + backend in one Next.js app)
+- Prefer simplicity over scalability
+- Avoid premature abstractions
+- Avoid over-engineering
+
+Coding guidelines:
+- Keep code readable and boring
+- Prefer explicit logic over clever patterns
+- Small functions, clear names
+- Avoid unnecessary libraries
+- Avoid adding features not explicitly requested
+
+When unsure:
+- Ask before adding new functionality
+- Default to removing or simplifying
+- Prefer doing less, not more
+
+Primary goal:
+Build a small, calm, respectful product that demonstrates restraint, taste, and real-world usability.

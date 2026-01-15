@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                BigInt             @id @default(autoincrement())
+  email             String?            @unique
+  emailVerified     DateTime?
+  name              String?
+  image             String?
+  password          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  accounts          Account[]
+  checkIns          CheckIn[]
+  emergencyContacts EmergencyContact[]
+  reminderSettings  ReminderSettings?
+  sessions          Session[]
+}
+
+model Account {
+  id                BigInt  @id @default(autoincrement())
+  userId            BigInt
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           BigInt   @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       BigInt
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model CheckIn {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  mood      String?
+  emoji     String   @default("🏃")
+  encouragement String?
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model ReminderSettings {
+  id                     BigInt   @id @default(autoincrement())
+  userId                 BigInt   @unique
+  inactivityDays         Int      @default(7)
+  enabled                Boolean  @default(true)
+  selfReminderEnabled    Boolean  @default(true)
+  contactReminderEnabled Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmergencyContact {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  name      String
+  email     String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationLog {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  type      String
+  status    String   @default("pending")
+  content   String?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
