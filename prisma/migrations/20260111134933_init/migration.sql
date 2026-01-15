@@ -108,10 +108,11 @@ COMMENT ON COLUMN "CheckIn"."createdAt" IS '签到记录创建时间戳';
 CREATE TABLE "ReminderSettings" (
     "id" BIGSERIAL NOT NULL,
     "userId" BIGINT NOT NULL,
-    "inactivityDays" INTEGER NOT NULL DEFAULT 7,
     "enabled" BOOLEAN NOT NULL DEFAULT true,
     "selfReminderEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "selfReminderDays" INTEGER NOT NULL DEFAULT 3,
     "contactReminderEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "contactReminderDays" INTEGER NOT NULL DEFAULT 7,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -121,10 +122,11 @@ CREATE TABLE "ReminderSettings" (
 COMMENT ON TABLE "ReminderSettings" IS '提醒设置表：存储用户的失联检测和提醒配置，每个用户只有一条记录';
 COMMENT ON COLUMN "ReminderSettings"."id" IS '设置记录唯一标识符（自增BIGINT）';
 COMMENT ON COLUMN "ReminderSettings"."userId" IS '关联的用户ID，外键引用User表，唯一约束（BIGINT）';
-COMMENT ON COLUMN "ReminderSettings"."inactivityDays" IS '失联检测天数阈值，超过此天数未签到将触发提醒（默认7天）';
 COMMENT ON COLUMN "ReminderSettings"."enabled" IS '是否启用失联提醒功能';
 COMMENT ON COLUMN "ReminderSettings"."selfReminderEnabled" IS '是否启用向自己发送提醒邮件';
+COMMENT ON COLUMN "ReminderSettings"."selfReminderDays" IS '自我提醒触发天数，连续多少天未签到后给自己发送提醒（默认3天）';
 COMMENT ON COLUMN "ReminderSettings"."contactReminderEnabled" IS '是否启用向紧急联系人发送提醒邮件';
+COMMENT ON COLUMN "ReminderSettings"."contactReminderDays" IS '联系人提醒触发天数，连续多少天未签到后通知紧急联系人（默认7天）';
 COMMENT ON COLUMN "ReminderSettings"."createdAt" IS '设置创建时间';
 COMMENT ON COLUMN "ReminderSettings"."updatedAt" IS '设置最后更新时间';
 
@@ -226,9 +228,13 @@ ALTER TABLE "EmergencyContact" ADD CONSTRAINT "EmergencyContact_userId_fkey"
 ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_userId_fkey" 
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- 添加数据完整性约束：确保失联检测天数大于0
-ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_inactivityDays_check" 
-    CHECK ("inactivityDays" > 0);
+-- 添加数据完整性约束：确保自我提醒天数大于0
+ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_selfReminderDays_check" 
+    CHECK ("selfReminderDays" > 0);
+
+-- 添加数据完整性约束：确保联系人提醒天数大于0
+ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_contactReminderDays_check" 
+    CHECK ("contactReminderDays" > 0);
 
 -- 添加数据完整性约束：确保通知状态为有效值
 ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_status_check" 

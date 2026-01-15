@@ -15,13 +15,18 @@ export default function Header({ user }: HeaderProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    const response = await fetch("/api/auth/signout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (response.ok) {
-      router.push("/auth/signin");
-      router.refresh();
+    try {
+      const response = await fetch("/api/auth/signout", {
+        method: "GET",
+      });
+      if (response.ok) {
+        router.push("/auth/signin");
+        router.refresh();
+      } else {
+        console.error("退出登录失败:", response.statusText);
+      }
+    } catch (error) {
+      console.error("退出登录错误:", error);
     }
   };
 

@@ -74,10 +74,11 @@ model CheckIn {
 model ReminderSettings {
   id                     BigInt   @id @default(autoincrement())
   userId                 BigInt   @unique
-  inactivityDays         Int      @default(7)
   enabled                Boolean  @default(true)
   selfReminderEnabled    Boolean  @default(true)
+  selfReminderDays       Int      @default(3)
   contactReminderEnabled Boolean  @default(false)
+  contactReminderDays    Int      @default(7)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -11,23 +11,30 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    const { inactivityDays, enabled, selfReminderEnabled, contactReminderEnabled } =
-      await request.json();
+    const { 
+      enabled, 
+      selfReminderEnabled, 
+      selfReminderDays, 
+      contactReminderEnabled, 
+      contactReminderDays 
+    } = await request.json();
 
     const settings = await db.reminderSettings.upsert({
       where: { userId: BigInt(session.user.id) },
       update: {
-        inactivityDays: Number(inactivityDays),
         enabled: Boolean(enabled),
         selfReminderEnabled: Boolean(selfReminderEnabled),
+        selfReminderDays: Number(selfReminderDays),
         contactReminderEnabled: Boolean(contactReminderEnabled),
+        contactReminderDays: Number(contactReminderDays),
       },
       create: {
         userId: BigInt(session.user.id),
-        inactivityDays: Number(inactivityDays),
         enabled: Boolean(enabled),
         selfReminderEnabled: Boolean(selfReminderEnabled),
+        selfReminderDays: Number(selfReminderDays),
         contactReminderEnabled: Boolean(contactReminderEnabled),
+        contactReminderDays: Number(contactReminderDays),
       },
     });
 

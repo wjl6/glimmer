@@ -41,9 +41,12 @@ export default async function SettingsPage() {
       <div className="space-y-8">
         <ReminderSettings
           settings={{
-            ...reminderSettings,
             id: reminderSettings.id.toString(),
-            userId: reminderSettings.userId.toString(),
+            enabled: reminderSettings.enabled,
+            selfReminderEnabled: reminderSettings.selfReminderEnabled,
+            selfReminderDays: reminderSettings.selfReminderDays,
+            contactReminderEnabled: reminderSettings.contactReminderEnabled,
+            contactReminderDays: reminderSettings.contactReminderDays,
           }}
         />
         <EmergencyContacts

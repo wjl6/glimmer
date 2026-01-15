@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Modal from "./Modal";
 
 interface Contact {
   id: string;
@@ -24,6 +25,8 @@ export default function EmergencyContacts({
   const [isAdding, setIsAdding] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<string | null>(null);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +68,13 @@ export default function EmergencyContacts({
     }
   };
 
-  const handleDelete = async (contactId: string) => {
-    if (!confirm("确定要删除这个联系人吗？")) return;
+  const handleDeleteClick = (contactId: string) => {
+    setContactToDelete(contactId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!contactToDelete) return;
 
     try {
       await fetch("/api/contacts", {
@@ -74,19 +82,35 @@ export default function EmergencyContacts({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: contactId }),
+        body: JSON.stringify({ id: contactToDelete }),
       });
       router.refresh();
+      setShowDeleteModal(false);
+      setContactToDelete(null);
     } catch (error) {
       console.error("删除失败:", error);
     }
   };
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="mb-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
-        紧急联系人
-      </h2>
+    <>
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setContactToDelete(null);
+        }}
+        title="确认删除"
+        message="确定要删除这个联系人吗？删除后无法恢复。"
+        type="confirm"
+        confirmText="删除"
+        cancelText="取消"
+        onConfirm={handleDeleteConfirm}
+      />
+      <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="mb-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
+          紧急联系人
+        </h2>
 
       <div className="space-y-4">
         {contacts.length > 0 ? (
@@ -121,7 +145,7 @@ export default function EmergencyContacts({
                   />
                 </button>
                 <button
-                  onClick={() => handleDelete(contact.id)}
+                  onClick={() => handleDeleteClick(contact.id)}
                   className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
                 >
                   删除
@@ -166,5 +190,6 @@ export default function EmergencyContacts({
         </form>
       </div>
     </div>
+    </>
   );
 }
