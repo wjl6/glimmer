@@ -1,15 +1,30 @@
 // 登录页面
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("test@email.com");
   const [password, setPassword] = useState("123456");
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("reset") === "true") {
+      setSuccessMessage("密码重置成功，请使用新密码登录");
+      // 清除URL参数
+      router.replace("/auth/signin");
+    }
+    if (searchParams.get("registered") === "true") {
+      setSuccessMessage("注册成功，请登录");
+      // 清除URL参数
+      router.replace("/auth/signin");
+    }
+  }, [searchParams, router]);
 
   const handleGoogleSignIn = () => {
     window.location.href = "/api/auth/signin/google";
@@ -88,6 +103,11 @@ export default function SignInPage() {
         </div>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">
+          {successMessage && (
+            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">
+              {successMessage}
+            </div>
+          )}
           <div>
             <label
               htmlFor="email"
@@ -124,14 +144,25 @@ export default function SignInPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
-          >
-            {isLoading ? "登录中..." : "登录"}
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="select-none w-full rounded-lg bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
+            >
+              {isLoading ? "登录中..." : "登录"}
+            </button>
+          </div>
         </form>
+
+        <div className="mt-4 text-right">
+          <Link
+            href="/auth/forgot-password"
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          >
+            忘记密码？
+          </Link>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
