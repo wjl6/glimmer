@@ -39,6 +39,7 @@ export async function POST(request: Request) {
     const recentCode = await db.emailVerificationCode.findFirst({
       where: {
         email,
+        type: "reset_password",
         createdAt: {
           gte: oneMinuteAgo,
         },
@@ -59,6 +60,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // 检查今天是否已发送超过3次重置密码验证码
+    const todayStart = new Date(now);
+    todayStart.setUTCHours(0, 0, 0, 0);
+    
+    const todayResetCodes = await db.emailVerificationCode.count({
+      where: {
+        email,
+        type: "reset_password",
+        createdAt: {
+          gte: todayStart,
+        },
+      },
+    });
+
+    if (todayResetCodes >= 3) {
+      return NextResponse.json(
+        { error: "今天已发送3次重置密码验证码，请明天再试" },
+        { status: 429 }
+      );
+    }
+
     // 生成验证码
     const code = generateVerificationCode();
     // 15分钟后过期（使用时间戳计算，确保准确性）
@@ -70,6 +92,7 @@ export async function POST(request: Request) {
       data: {
         email,
         code,
+        type: "reset_password",
         createdAt: now,
         expiresAt,
       },

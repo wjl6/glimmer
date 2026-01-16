@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       where: {
         email,
         code: verificationCode,
+        type: "reset_password",
         used: false,
         expiresAt: {
           gt: now,

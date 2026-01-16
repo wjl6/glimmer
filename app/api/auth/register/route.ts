@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       where: {
         email,
         code: verificationCode,
+        type: "register",
         used: false,
         expiresAt: {
           gt: now,

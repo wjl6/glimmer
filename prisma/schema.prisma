@@ -61,12 +61,14 @@ model EmailVerificationCode {
   id        BigInt   @id @default(autoincrement())
   email     String
   code      String
+  type      String   @default("register") // "register" 或 "reset_password"
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
   expiresAt DateTime
 
   @@index([email, createdAt])
   @@index([email, used])
+  @@index([email, type, createdAt])
 }
 
 model CheckIn {

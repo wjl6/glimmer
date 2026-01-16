@@ -39,6 +39,7 @@ export async function POST(request: Request) {
     const recentCode = await db.emailVerificationCode.findFirst({
       where: {
         email,
+        type: "register",
         createdAt: {
           gte: oneMinuteAgo,
         },
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
       data: {
         email,
         code,
+        type: "register",
         createdAt: now,
         expiresAt,
       },

@@ -174,6 +174,38 @@ COMMENT ON COLUMN "NotificationLog"."content" IS '通知内容（可选，用于
 COMMENT ON COLUMN "NotificationLog"."error" IS '错误信息（如果发送失败，记录错误详情）';
 COMMENT ON COLUMN "NotificationLog"."createdAt" IS '日志记录创建时间';
 
+
+-- 邮箱验证码表：存储注册时的邮箱验证码
+CREATE TABLE "EmailVerificationCode" (
+                                         "id" BIGSERIAL NOT NULL,
+                                         "email" TEXT NOT NULL,
+                                         "type" TEXT NOT NULL DEFAULT 'register',
+                                         "code" TEXT NOT NULL,
+                                         "used" BOOLEAN NOT NULL DEFAULT false,
+                                         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         "expiresAt" TIMESTAMP(3) NOT NULL,
+
+                                         CONSTRAINT "EmailVerificationCode_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "EmailVerificationCode" IS '邮箱验证码表：存储注册时的邮箱验证码，用于验证邮箱所有权';
+COMMENT ON COLUMN "EmailVerificationCode"."id" IS '验证码记录唯一标识符（自增BIGINT）';
+COMMENT ON COLUMN "EmailVerificationCode"."email" IS '邮箱地址';
+COMMENT ON COLUMN "EmailVerificationCode"."type" IS '验证码类型：register（注册）或 reset_password（重置密码）';
+COMMENT ON COLUMN "EmailVerificationCode"."code" IS '6位数字验证码';
+COMMENT ON COLUMN "EmailVerificationCode"."used" IS '是否已使用（使用后不能再用于验证）';
+COMMENT ON COLUMN "EmailVerificationCode"."createdAt" IS '验证码创建时间';
+COMMENT ON COLUMN "EmailVerificationCode"."expiresAt" IS '验证码过期时间（15分钟后）';
+
+-- 创建复合索引：优化按邮箱和创建时间查询验证码的性能（用于60秒限制检查）
+CREATE INDEX "EmailVerificationCode_email_createdAt_idx" ON "EmailVerificationCode"("email", "createdAt" DESC);
+
+-- 创建复合索引：优化按邮箱和已使用状态查询有效验证码的性能
+CREATE INDEX "EmailVerificationCode_email_used_idx" ON "EmailVerificationCode"("email", "used");
+
+-- 创建复合索引：优化按邮箱、类型和创建时间查询验证码的性能（用于每日限制检查）
+CREATE INDEX "EmailVerificationCode_email_type_createdAt_idx" ON "EmailVerificationCode"("email", "type", "createdAt" DESC);
+
 -- 创建唯一索引：用户邮箱唯一性约束
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email") WHERE "email" IS NOT NULL;
 
@@ -205,43 +237,43 @@ CREATE INDEX "EmergencyContact_userId_idx" ON "EmergencyContact"("userId");
 CREATE INDEX "NotificationLog_userId_createdAt_idx" ON "NotificationLog"("userId", "createdAt" DESC);
 
 -- 添加外键约束：Account表关联User表，级联删除
-ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" 
+ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加外键约束：Session表关联User表，级联删除
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" 
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加外键约束：CheckIn表关联User表，级联删除
-ALTER TABLE "CheckIn" ADD CONSTRAINT "CheckIn_userId_fkey" 
+ALTER TABLE "CheckIn" ADD CONSTRAINT "CheckIn_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加外键约束：ReminderSettings表关联User表，级联删除
-ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_userId_fkey" 
+ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加外键约束：EmergencyContact表关联User表，级联删除
-ALTER TABLE "EmergencyContact" ADD CONSTRAINT "EmergencyContact_userId_fkey" 
+ALTER TABLE "EmergencyContact" ADD CONSTRAINT "EmergencyContact_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加外键约束：NotificationLog表关联User表，级联删除
-ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_userId_fkey" 
+ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 添加数据完整性约束：确保自我提醒天数大于0
-ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_selfReminderDays_check" 
+ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_selfReminderDays_check"
     CHECK ("selfReminderDays" > 0);
 
 -- 添加数据完整性约束：确保联系人提醒天数大于0
-ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_contactReminderDays_check" 
+ALTER TABLE "ReminderSettings" ADD CONSTRAINT "ReminderSettings_contactReminderDays_check"
     CHECK ("contactReminderDays" > 0);
 
 -- 添加数据完整性约束：确保通知状态为有效值
-ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_status_check" 
+ALTER TABLE "NotificationLog" ADD CONSTRAINT "NotificationLog_status_check"
     CHECK ("status" IN ('pending', 'sent', 'failed'));
 
 -- 添加数据完整性约束：确保邮箱格式基本正确（包含@符号）
-ALTER TABLE "EmergencyContact" ADD CONSTRAINT "EmergencyContact_email_check" 
+ALTER TABLE "EmergencyContact" ADD CONSTRAINT "EmergencyContact_email_check"
     CHECK ("email" ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
 
 -- 插入默认邮箱用户（id使用DEFAULT让数据库自动生成）
