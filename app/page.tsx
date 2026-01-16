@@ -2,6 +2,7 @@
 import { auth } from "@/app/lib/auth";
 import { redirect } from "next/navigation";
 import CheckInForm from "@/app/components/CheckInForm";
+import EditableName from "@/app/components/EditableName";
 import { db } from "@/app/lib/db";
 import { getTodayStartUTC, addDaysUTC, formatDateForDisplay } from "@/app/lib/timezone";
 
@@ -45,7 +46,7 @@ export default async function Home() {
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <div className="mb-8">
         <h1 className="mb-2 text-2xl font-medium text-zinc-900 dark:text-zinc-50">
-          你好，{session.user.name || "朋友"}
+          你好，<EditableName name={session.user.name || null} />
         </h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           今天过得怎么样？
