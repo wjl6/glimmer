@@ -13,6 +13,18 @@ export async function POST(request: Request) {
 
     const { name, email } = await request.json();
 
+    // 检查是否已有3个联系人
+    const existingContactsCount = await db.emergencyContact.count({
+      where: { userId: BigInt(session.user.id) },
+    });
+
+    if (existingContactsCount >= 3) {
+      return NextResponse.json(
+        { error: "最多只能添加3个紧急联系人" },
+        { status: 400 }
+      );
+    }
+
     const contact = await db.emergencyContact.create({
       data: {
         userId: BigInt(session.user.id),

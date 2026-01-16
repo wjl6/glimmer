@@ -17,11 +17,12 @@ export default async function SettingsPage() {
     where: { userId: BigInt(session.user.id) },
   });
 
-  // 如果没有设置，创建默认设置
+  // 如果没有设置，创建默认设置（默认关闭提醒）
   if (!reminderSettings) {
     reminderSettings = await db.reminderSettings.create({
       data: {
         userId: BigInt(session.user.id),
+        enabled: false, // 新用户默认关闭提醒
       },
     });
   }
