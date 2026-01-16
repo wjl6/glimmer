@@ -13,8 +13,9 @@
 - ✅ 基于可配置天数的失联检测
 - ✅ 多级提醒策略（自己 → 紧急联系人）
 - ✅ 邮件通知
-- ✅ 邮箱登录
-- ❌ 多种方式登录（Google、微信）
+- ✅ 邮箱登录（注册、登录、密码重置）
+- ⚠️ Google OAuth 登录（已配置，待测试）
+- ❌ 微信登录（待实现）
 
 ## 技术栈
 
@@ -126,29 +127,54 @@ pnpm dev
 app/
 ├── api/              # API 路由
 │   ├── auth/         # NextAuth.js 认证
+│   │   ├── [...nextauth]/  # NextAuth 路由
+│   │   ├── register/       # 注册 API
+│   │   ├── reset-password/ # 密码重置 API
+│   │   ├── send-reset-code/ # 发送重置码 API
+│   │   ├── send-verification-code/ # 发送验证码 API
+│   │   └── signin-credentials/ # 邮箱登录 API
 │   ├── checkin/      # 签到 API
 │   ├── contacts/     # 紧急联系人 API
 │   ├── cron/         # 定时任务 API
 │   └── settings/     # 设置 API
 ├── auth/             # 认证页面
+│   ├── signin/       # 登录页面
+│   ├── register/     # 注册页面
+│   └── forgot-password/ # 忘记密码页面
 ├── components/       # React 组件
+│   ├── CheckInForm.tsx
+│   ├── EmergencyContacts.tsx
+│   ├── Header.tsx
+│   ├── Modal.tsx
+│   ├── providers.tsx
+│   └── ReminderSettings.tsx
 ├── lib/              # 工具函数
+│   ├── auth.ts       # NextAuth 配置
 │   ├── db.ts         # 数据库客户端
 │   ├── email.ts      # 邮件服务
-│   └── reminder.ts   # 提醒逻辑
+│   ├── encouragementAgent.ts # AI 鼓励生成
+│   ├── reminder.ts   # 提醒逻辑
+│   └── timezone.ts   # 时区处理
 ├── settings/         # 设置页面
 ├── layout.tsx        # 根布局
 └── page.tsx          # 首页
 
 prisma/
-└── schema.prisma     # 数据库模型定义
+├── schema.prisma     # 数据库模型定义
+└── migrations/       # 数据库迁移文件
+
+types/
+└── next-auth.d.ts    # NextAuth 类型扩展
+
+generated/
+└── prisma/           # Prisma 生成的客户端（自动生成）
 ```
 
 ## 开发指南
 
 ### 添加新的登录方式
 
-在 `app/auth.ts` 中添加新的 provider：
+在 `app/lib/auth.ts` 中添加新的 provider：
 
 ```typescript
 import WeChat from "next-auth/providers/wechat"; // 需要自定义 provider

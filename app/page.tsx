@@ -1,5 +1,5 @@
 // 首页 - 签到页面
-import { auth } from "@/app/auth";
+import { auth } from "@/app/lib/auth";
 import { redirect } from "next/navigation";
 import CheckInForm from "@/app/components/CheckInForm";
 import { db } from "@/app/lib/db";

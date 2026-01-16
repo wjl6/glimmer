@@ -1,5 +1,5 @@
 // 设置页面
-import { auth } from "@/app/auth";
+import { auth } from "@/app/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/app/lib/db";
 import ReminderSettings from "@/app/components/ReminderSettings";

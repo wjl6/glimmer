@@ -130,13 +130,28 @@ Authorization: Bearer YOUR_CRON_SECRET
 
 建议每天执行一次，时间设置为早上 9 点。
 
-## 9. 常见问题
+## 9. 目录结构说明
+
+项目遵循 Next.js App Router 最佳实践：
+
+- **配置文件**：`app/lib/` 目录（如 `auth.ts`、`db.ts`）
+- **组件**：`app/components/` 目录
+- **类型定义**：项目根目录 `types/` 目录
+- **生成文件**：项目根目录 `generated/` 目录（Prisma Client）
+
+## 10. 常见问题
 
 ### Prisma Client 生成失败
 
 ```bash
 # 清除并重新生成
-rm -rf node_modules/.prisma
+# Windows PowerShell
+Remove-Item -Path "node_modules\.prisma" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "generated" -Recurse -Force -ErrorAction SilentlyContinue
+pnpm prisma generate
+
+# Linux/Mac
+rm -rf node_modules/.prisma generated
 pnpm prisma generate
 ```
 
@@ -153,3 +168,11 @@ pnpm prisma generate
 1. AUTH_SECRET 是否设置
 2. AUTH_URL 是否正确
 3. OAuth 提供商配置是否正确
+
+### 导入路径错误
+
+如果遇到 `Cannot find module '@/app/auth'` 等错误：
+
+- NextAuth 配置已移动到 `app/lib/auth.ts`
+- 确保所有导入路径使用 `@/app/lib/auth` 而不是 `@/app/auth`
+- 运行 `pnpm prisma generate` 确保 Prisma Client 已生成到正确位置

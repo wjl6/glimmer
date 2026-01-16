@@ -1,5 +1,5 @@
 // 提醒设置 API
-import { auth } from "@/app/auth";
+import { auth } from "@/app/lib/auth";
 import { db } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
