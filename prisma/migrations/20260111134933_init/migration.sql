@@ -160,6 +160,7 @@ CREATE TABLE "NotificationLog" (
     "status" TEXT NOT NULL DEFAULT 'pending',
     "content" TEXT,
     "error" TEXT,
+    "recipientEmail" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "NotificationLog_pkey" PRIMARY KEY ("id")
@@ -172,6 +173,7 @@ COMMENT ON COLUMN "NotificationLog"."type" IS '通知类型（如：self_reminde
 COMMENT ON COLUMN "NotificationLog"."status" IS '通知状态（pending：待发送，sent：已发送，failed：发送失败）';
 COMMENT ON COLUMN "NotificationLog"."content" IS '通知内容（可选，用于存储邮件内容摘要等）';
 COMMENT ON COLUMN "NotificationLog"."error" IS '错误信息（如果发送失败，记录错误详情）';
+COMMENT ON COLUMN "NotificationLog"."recipientEmail" IS '接收通知的邮箱地址（用户自己的邮箱或紧急联系人的邮箱）';
 COMMENT ON COLUMN "NotificationLog"."createdAt" IS '日志记录创建时间';
 
 

@@ -162,6 +162,7 @@ async function processSelfReminder(
   status: string;
   content: string;
   error: string | null;
+  recipientEmail: string;
 }>> {
   const logs: Array<{
     userId: bigint;
@@ -169,6 +170,7 @@ async function processSelfReminder(
     status: string;
     content: string;
     error: string | null;
+    recipientEmail: string;
   }> = [];
 
   if (!user.reminderSettings || !user.reminderSettings.selfReminderEnabled || !user.email) {
@@ -227,6 +229,7 @@ async function processSelfReminder(
         status: result.success ? "sent" : "failed",
         content: emailText,
         error: result.success ? null : result.error || null,
+        recipientEmail: user.email,
       });
     } catch (error) {
       console.error(`用户 ${user.id} 的自提醒发送失败:`, error);
@@ -236,6 +239,7 @@ async function processSelfReminder(
         status: "failed",
         content: "",
         error: error instanceof Error ? error.message : "未知错误",
+        recipientEmail: user.email || "",
       });
     }
   }
@@ -253,6 +257,7 @@ async function processContactReminder(
   status: string;
   content: string;
   error: string | null;
+  recipientEmail: string;
 }>> {
   const logs: Array<{
     userId: bigint;
@@ -260,6 +265,7 @@ async function processContactReminder(
     status: string;
     content: string;
     error: string | null;
+    recipientEmail: string;
   }> = [];
 
   if (!user.reminderSettings || !user.reminderSettings.contactReminderEnabled || user.emergencyContacts.length === 0) {
@@ -330,6 +336,7 @@ ${userName} 已经有 ${daysSinceLastCheckIn} 天 没有在微光签到或留下
           status: result.success ? "sent" : "failed",
           content: contactText,
           error: result.success ? null : result.error || null,
+          recipientEmail: contact.email,
         });
       } catch (error) {
         console.error(`用户 ${user.id} 的联系人 ${contact.email} 提醒发送失败:`, error);
@@ -339,6 +346,7 @@ ${userName} 已经有 ${daysSinceLastCheckIn} 天 没有在微光签到或留下
           status: "failed",
           content: contactText,
           error: error instanceof Error ? error.message : "未知错误",
+          recipientEmail: contact.email,
         });
       }
     }
@@ -354,6 +362,7 @@ async function batchCreateNotificationLogs(
     status: string;
     content: string;
     error: string | null;
+    recipientEmail: string;
   }>
 ): Promise<void> {
   if (logs.length === 0) {
@@ -418,6 +427,7 @@ export async function checkInactivityAndRemind() {
       status: string;
       content: string;
       error: string | null;
+      recipientEmail: string;
     }> = [];
 
     for (const user of validUsers) {
@@ -442,7 +452,8 @@ export async function checkInactivityAndRemind() {
 
           // 标准化 lastCheckIn 为 UTC 时区日期进行比较
           const normalizedLastCheckIn = lastCheckIn ? normalizeDateToUTC(lastCheckIn) : null;
-          const isSelfInactive = !normalizedLastCheckIn || normalizedLastCheckIn < selfCheckDate;
+          // 如果最后一次签到日期 <= 阈值日期，说明已经达到或超过提醒天数，需要提醒
+          const isSelfInactive = !normalizedLastCheckIn || normalizedLastCheckIn <= selfCheckDate;
 
           if (isSelfInactive) {
             const daysSinceLastCheckIn = calculateDaysSinceLastCheckIn(
@@ -467,7 +478,8 @@ export async function checkInactivityAndRemind() {
 
           // 标准化 lastCheckIn 为 UTC 时区日期进行比较
           const normalizedLastCheckIn = lastCheckIn ? normalizeDateToUTC(lastCheckIn) : null;
-          const isContactInactive = !normalizedLastCheckIn || normalizedLastCheckIn < contactCheckDate;
+          // 如果最后一次签到日期 <= 阈值日期，说明已经达到或超过提醒天数，需要提醒
+          const isContactInactive = !normalizedLastCheckIn || normalizedLastCheckIn <= contactCheckDate;
 
           if (isContactInactive) {
             const daysSinceLastCheckIn = calculateDaysSinceLastCheckIn(

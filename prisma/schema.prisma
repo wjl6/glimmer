@@ -112,13 +112,14 @@ model EmergencyContact {
 }
 
 model NotificationLog {
-  id        BigInt   @id @default(autoincrement())
-  userId    BigInt
-  type      String
-  status    String   @default("pending")
-  content   String?
-  error     String?
-  createdAt DateTime @default(now())
+  id             BigInt   @id @default(autoincrement())
+  userId         BigInt
+  type           String
+  status         String   @default("pending")
+  content        String?
+  error          String?
+  recipientEmail String
+  createdAt      DateTime @default(now())
 
   @@index([userId, createdAt])
 }
