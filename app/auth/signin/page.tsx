@@ -21,8 +21,15 @@ export default function SignInPage() {
     }
     if (searchParams.get("registered") === "true") {
       setSuccessMessage("注册成功，请登录");
-      // 清除URL参数
-      router.replace("/auth/signin");
+      // 从 URL 参数中获取邮箱并自动填充
+      const emailParam = searchParams.get("email");
+      if (emailParam) {
+        setEmail(decodeURIComponent(emailParam));
+      }
+      // 延迟清除URL参数，确保状态更新完成
+      setTimeout(() => {
+        router.replace("/auth/signin");
+      }, 100);
     }
   }, [searchParams, router]);
 

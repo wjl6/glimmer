@@ -93,7 +93,9 @@ export default function RegisterPage() {
       }
 
       if (response.ok) {
-        router.push("/auth/signin?registered=true");
+        // 将邮箱编码后添加到 URL 参数中
+        const encodedEmail = encodeURIComponent(email);
+        router.push(`/auth/signin?registered=true&email=${encodedEmail}`);
       } else {
         const errorMsg = data?.error || `注册失败 (${response.status})`;
         console.error("注册失败:", errorMsg, data);
