@@ -1,33 +1,14 @@
 // 失联检测和提醒系统
 import { db } from "@/app/lib/db";
 import { sendEmail } from "@/app/lib/email";
+import {
+  normalizeDateToUTC,
+  getTodayStartUTC,
+  calculateDaysBetween,
+  addDaysUTC,
+} from "@/app/lib/timezone";
 
 const BATCH_SIZE = 100;
-
-/**
- * 将日期标准化为 UTC 时区的 00:00:00
- * 用于统一日期比较，避免时区问题
- */
-function normalizeDateToUTC(date: Date): Date {
-  const utcDate = new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    0,
-    0,
-    0,
-    0
-  ));
-  return utcDate;
-}
-
-/**
- * 获取当前 UTC 日期的 00:00:00
- */
-function getTodayUTCStart(): Date {
-  const now = new Date();
-  return normalizeDateToUTC(now);
-}
 
 interface UserWithRelations {
   id: bigint;
@@ -102,7 +83,7 @@ async function fetchLastCheckIns(userIds: bigint[]): Promise<LastCheckInMap> {
   for (const checkIn of checkIns) {
     const userIdStr = checkIn.userId.toString();
     if (!processedUsers.has(userIdStr)) {
-      // 将数据库返回的日期标准化为 UTC 日期（只保留日期部分，时间设为 00:00:00）
+      // 将数据库返回的日期标准化为 UTC 时区的日期（只保留日期部分，时间设为 00:00:00）
       const normalizedDate = normalizeDateToUTC(checkIn.date);
       lastCheckInMap[userIdStr] = normalizedDate;
       processedUsers.add(userIdStr);
@@ -167,10 +148,8 @@ function calculateDaysSinceLastCheckIn(
   if (!lastCheckIn) {
     return defaultDays;
   }
-  // 标准化日期为 UTC 的 00:00:00，确保日期比较准确
-  const normalizedLastCheckIn = normalizeDateToUTC(lastCheckIn);
-  const normalizedNow = normalizeDateToUTC(now);
-  return Math.floor((normalizedNow.getTime() - normalizedLastCheckIn.getTime()) / (1000 * 60 * 60 * 24));
+  // 标准化日期为 UTC 时区的 00:00:00，确保日期比较准确
+  return calculateDaysBetween(lastCheckIn, now);
 }
 
 async function processSelfReminder(
@@ -403,7 +382,7 @@ async function batchCreateNotificationLogs(
 export async function checkInactivityAndRemind() {
   const now = new Date();
   // 使用 UTC 时区的今天开始时间，确保时区一致性
-  const todayStart = getTodayUTCStart();
+  const todayStart = getTodayStartUTC();
 
   let skip = 0;
   let hasMore = true;
@@ -454,22 +433,14 @@ export async function checkInactivityAndRemind() {
         const todayReminders = todayReminderMap[userIdStr] || { self: false, contact: false };
 
         // 使用 UTC 时区的今天作为基准
-        const todayUTC = getTodayUTCStart();
+        const todayUTC = getTodayStartUTC();
 
         // 分别处理自我提醒
         if (selfReminderEnabled && !todayReminders.self) {
-          // 计算自我提醒的阈值日期（UTC）
-          const selfCheckDate = new Date(Date.UTC(
-            todayUTC.getUTCFullYear(),
-            todayUTC.getUTCMonth(),
-            todayUTC.getUTCDate() - selfReminderDays,
-            0,
-            0,
-            0,
-            0
-          ));
+          // 计算自我提醒的阈值日期（UTC 时区）
+          const selfCheckDate = addDaysUTC(todayUTC, -selfReminderDays);
 
-          // 标准化 lastCheckIn 为 UTC 日期进行比较
+          // 标准化 lastCheckIn 为 UTC 时区日期进行比较
           const normalizedLastCheckIn = lastCheckIn ? normalizeDateToUTC(lastCheckIn) : null;
           const isSelfInactive = !normalizedLastCheckIn || normalizedLastCheckIn < selfCheckDate;
 
@@ -491,18 +462,10 @@ export async function checkInactivityAndRemind() {
 
         // 分别处理联系人提醒
         if (contactReminderEnabled && !todayReminders.contact) {
-          // 计算联系人提醒的阈值日期（UTC）
-          const contactCheckDate = new Date(Date.UTC(
-            todayUTC.getUTCFullYear(),
-            todayUTC.getUTCMonth(),
-            todayUTC.getUTCDate() - contactReminderDays,
-            0,
-            0,
-            0,
-            0
-          ));
+          // 计算联系人提醒的阈值日期（UTC 时区）
+          const contactCheckDate = addDaysUTC(todayUTC, -contactReminderDays);
 
-          // 标准化 lastCheckIn 为 UTC 日期进行比较
+          // 标准化 lastCheckIn 为 UTC 时区日期进行比较
           const normalizedLastCheckIn = lastCheckIn ? normalizeDateToUTC(lastCheckIn) : null;
           const isContactInactive = !normalizedLastCheckIn || normalizedLastCheckIn < contactCheckDate;
 

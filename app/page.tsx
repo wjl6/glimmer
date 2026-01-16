@@ -3,6 +3,7 @@ import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 import CheckInForm from "@/app/components/CheckInForm";
 import { db } from "@/app/lib/db";
+import { getTodayStartUTC, addDaysUTC, formatDateForDisplay } from "@/app/lib/timezone";
 
 export default async function Home() {
   const session = await auth();
@@ -11,11 +12,9 @@ export default async function Home() {
     redirect("/auth/signin");
   }
 
-  // 获取今日签到记录
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // 获取今日签到记录（使用 UTC 时区，数据库统一存储 UTC 时间）
+  const today = getTodayStartUTC();
+  const tomorrow = addDaysUTC(today, 1);
 
   const todayCheckIn = await db.checkIn.findFirst({
     where: {
@@ -28,8 +27,7 @@ export default async function Home() {
   });
 
   // 获取最近7天的签到记录
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgo = addDaysUTC(today, -7);
 
   const recentCheckIns = await db.checkIn.findMany({
     where: {
@@ -73,7 +71,7 @@ export default async function Home() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {new Date(checkIn.date).toLocaleDateString("zh-CN", {
+                    {formatDateForDisplay(checkIn.date, {
                       month: "long",
                       day: "numeric",
                     })}
