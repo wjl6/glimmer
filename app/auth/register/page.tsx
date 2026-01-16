@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -63,6 +64,13 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // 验证密码是否一致
+    if (password !== confirmPassword) {
+      setError("两次输入的密码不一致，请重新输入");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -71,7 +79,7 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, name, verificationCode }),
+        body: JSON.stringify({ email, password, confirmPassword, name, verificationCode }),
       });
 
       let data;
@@ -205,6 +213,25 @@ export default function RegisterPage() {
             minLength={6}
             className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500"
             placeholder="至少 6 位"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          >
+            确认密码
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500"
+            placeholder="请再次输入密码"
           />
         </div>
 

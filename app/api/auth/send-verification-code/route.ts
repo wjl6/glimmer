@@ -19,6 +19,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // 检查邮箱是否已注册
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "该邮箱已被注册，请直接登录" },
+        { status: 400 }
+      );
+    }
+
     // 检查60秒内是否已发送过验证码
     // 使用当前时间（JavaScript Date 对象内部使用 UTC 时间戳）
     const now = new Date();

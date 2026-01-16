@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name, verificationCode } = body;
+    const { email, password, confirmPassword, name, verificationCode } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -18,6 +18,14 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "密码长度至少为 6 位" },
+        { status: 400 }
+      );
+    }
+
+    // 验证两次密码是否一致
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { error: "两次输入的密码不一致" },
         { status: 400 }
       );
     }
