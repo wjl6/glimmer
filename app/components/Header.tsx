@@ -36,7 +36,7 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-lg font-medium text-zinc-900 dark:text-zinc-50"
+            className="select-none flex items-center gap-2 text-lg font-medium text-zinc-900 dark:text-zinc-50"
           >
             <img
               src="/img/微光.ico"
@@ -50,13 +50,13 @@ export default function Header({ user }: HeaderProps) {
             <div className="flex items-center gap-4">
               <Link
                 href="/settings"
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                className="select-none text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
               >
                 设置
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                className="select-none text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
               >
                 退出
               </button>
@@ -64,7 +64,7 @@ export default function Header({ user }: HeaderProps) {
           ) : (
             <Link
               href="/auth/signin"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              className="select-none text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
             >
               登录
             </Link>

@@ -130,7 +130,7 @@ export default function EmergencyContacts({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleToggle(contact.id, contact.enabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     contact.enabled
                       ? "bg-white dark:bg-white"
                       : "bg-zinc-200 dark:bg-zinc-700"
@@ -146,7 +146,7 @@ export default function EmergencyContacts({
                 </button>
                 <button
                   onClick={() => handleDeleteClick(contact.id)}
-                  className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                  className="select-none text-sm text-red-600 hover:text-red-700 dark:text-red-400"
                 >
                   删除
                 </button>
@@ -183,7 +183,7 @@ export default function EmergencyContacts({
           <button
             type="submit"
             disabled={isAdding}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
+            className="select-none w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
           >
             {isAdding ? "添加中..." : "添加联系人"}
           </button>

@@ -99,7 +99,7 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
           </div>
           <button
             onClick={() => setEnabled(!enabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               enabled
                 ? "bg-white dark:bg-white"
                 : "bg-zinc-200 dark:bg-zinc-700"
@@ -128,7 +128,7 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
               </div>
               <button
                 onClick={() => setSelfReminderEnabled(!selfReminderEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   selfReminderEnabled
                     ? "bg-white dark:bg-white"
                     : "bg-zinc-200 dark:bg-zinc-700"
@@ -190,7 +190,7 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
                 onClick={() =>
                   setContactReminderEnabled(!contactReminderEnabled)
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   contactReminderEnabled
                     ? "bg-white dark:bg-white"
                     : "bg-zinc-200 dark:bg-zinc-700"
@@ -244,7 +244,7 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
+          className="select-none w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
         >
           {isSaving ? "保存中..." : "保存设置"}
         </button>

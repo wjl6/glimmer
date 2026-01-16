@@ -85,7 +85,7 @@ export default function CheckInForm({
               key={emotion.emoji}
               type="button"
               onClick={() => setSelectedEmotion({ emoji: emotion.emoji, mood: emotion.label })}
-              className={`rounded-lg border p-4 text-center transition-colors ${
+              className={`select-none rounded-lg border p-4 text-center transition-colors ${
                 selectedEmotion?.emoji === emotion.emoji
                   ? "border-zinc-900 bg-zinc-100 dark:border-zinc-50 dark:bg-zinc-800"
                   : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
@@ -103,7 +103,7 @@ export default function CheckInForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-lg bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
+        className="select-none w-full rounded-lg bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100"
       >
         {isSubmitting ? "签到中..." : "签到"}
       </button>
