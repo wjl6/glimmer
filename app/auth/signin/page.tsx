@@ -50,30 +50,30 @@ export default function SignInPage() {
         <h1 className="mb-2 text-2xl font-medium text-zinc-900 dark:text-zinc-50">
           欢迎回来
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          选择一种方式登录
-        </p>
+        {/*<p className="text-sm text-zinc-600 dark:text-zinc-400">*/}
+        {/*  选择一种方式登录*/}
+        {/*</p>*/}
       </div>
 
       <div className="space-y-4">
-        {/* 谷歌登录 */}
-        <button
-          onClick={handleGoogleSignIn}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-        >
-          使用 Google 登录
-        </button>
+        {/*/!* 谷歌登录 *!/*/}
+        {/*<button*/}
+        {/*  onClick={handleGoogleSignIn}*/}
+        {/*  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"*/}
+        {/*>*/}
+        {/*  使用 Google 登录*/}
+        {/*</button>*/}
 
-        {/* 微信登录 */}
-        <button
-          onClick={() => {
-            // 微信登录逻辑待实现
-            alert("微信登录功能开发中");
-          }}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-        >
-          使用微信登录
-        </button>
+        {/*/!* 微信登录 *!/*/}
+        {/*<button*/}
+        {/*  onClick={() => {*/}
+        {/*    // 微信登录逻辑待实现*/}
+        {/*    alert("微信登录功能开发中");*/}
+        {/*  }}*/}
+        {/*  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"*/}
+        {/*>*/}
+        {/*  使用微信登录*/}
+        {/*</button>*/}
 
         {/* 邮箱登录表单 */}
         <div className="relative py-4">
@@ -82,7 +82,7 @@ export default function SignInPage() {
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="bg-white px-2 text-zinc-500 dark:bg-black dark:text-zinc-400">
-              或使用邮箱
+              使用邮箱
             </span>
           </div>
         </div>
