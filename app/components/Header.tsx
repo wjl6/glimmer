@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
   user?: {
@@ -13,21 +14,36 @@ interface HeaderProps {
 
 export default function Header({ user }: HeaderProps) {
   const router = useRouter();
+  const [csrfToken, setCsrfToken] = useState<string>("");
 
-  const handleSignOut = async () => {
-    try {
-      const response = await fetch("/api/auth/signout", {
-        method: "GET",
+  useEffect(() => {
+    // 获取 CSRF token
+    fetch("/api/auth/csrf", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.csrfToken) {
+          setCsrfToken(data.csrfToken);
+        }
+      })
+      .catch((error) => {
+        console.error("获取 CSRF token 失败:", error);
       });
-      if (response.ok) {
-        router.push("/auth/signin");
-        router.refresh();
-      } else {
-        console.error("退出登录失败:", response.statusText);
-      }
-    } catch (error) {
-      console.error("退出登录错误:", error);
+  }, []);
+
+  const handleSignOut = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // 清除所有可能的本地存储
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+      sessionStorage.clear();
     }
+    
+    // 提交表单（会自动包含 CSRF token）
+    const form = e.currentTarget as HTMLFormElement;
+    form.submit();
   };
 
   return (
@@ -54,12 +70,16 @@ export default function Header({ user }: HeaderProps) {
               >
                 设置
               </Link>
-              <button
-                onClick={handleSignOut}
-                className="select-none text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              >
-                退出
-              </button>
+              <form method="POST" action="/api/auth/signout" onSubmit={handleSignOut}>
+                <input type="hidden" name="csrfToken" value={csrfToken} />
+                <input type="hidden" name="callbackUrl" value="/auth/signin" />
+                <button
+                  type="submit"
+                  className="select-none text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                >
+                  退出
+                </button>
+              </form>
             </div>
           ) : (
             <Link
