@@ -5,6 +5,25 @@
 ## 项目简介
 
 微光是一个极简主义的每日签到和失联提醒工具。它设计得安静且不打扰，只在用户失联时才会提醒。目前正在开发阶段，核心特性将逐步完善
+
+🌐 **在线体验**: [https://glimmer.surpassing.top/](https://glimmer.surpassing.top/)
+
+### 预览图
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="public/sampleImage/首页.png" alt="首页预览" width="400" />
+        <p>首页</p>
+      </td>
+      <td align="center">
+        <img src="public/sampleImage/设置.png" alt="设置页面预览" width="400" />
+        <p>设置页面</p>
+      </td>
+    </tr>
+  </table>
+</div>
 ## 核心特性
 
 - ✅ 每日签到（每天一次）
