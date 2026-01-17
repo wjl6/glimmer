@@ -8,6 +8,10 @@
 
 🌐 **在线体验**: [https://glimmer.surpassing.top/](https://glimmer.surpassing.top/)
 
+<div>
+  <img src="public/sampleImage/preview.png" alt="访问二维码" width="200" />
+</div>
+
 ### 预览图
 
 <div align="center">
