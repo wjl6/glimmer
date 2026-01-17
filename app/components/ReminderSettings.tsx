@@ -101,14 +101,14 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
             onClick={() => setEnabled(!enabled)}
             className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               enabled
-                ? "bg-white dark:bg-white"
+                ? "bg-zinc-900 dark:bg-white"
                 : "bg-zinc-200 dark:bg-zinc-700"
             }`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
                 enabled
-                  ? "translate-x-6 bg-zinc-900 dark:bg-zinc-950"
+                  ? "translate-x-6 bg-white dark:bg-zinc-950"
                   : "translate-x-1 bg-white dark:bg-zinc-950"
               }`}
             />
@@ -130,14 +130,14 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
                 onClick={() => setSelfReminderEnabled(!selfReminderEnabled)}
                 className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   selfReminderEnabled
-                    ? "bg-white dark:bg-white"
+                    ? "bg-zinc-900 dark:bg-white"
                     : "bg-zinc-200 dark:bg-zinc-700"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
                     selfReminderEnabled
-                      ? "translate-x-6 bg-zinc-900 dark:bg-zinc-950"
+                      ? "translate-x-6 bg-white dark:bg-zinc-950"
                       : "translate-x-1 bg-white dark:bg-zinc-950"
                   }`}
                 />
@@ -192,14 +192,14 @@ export default function ReminderSettings({ settings }: ReminderSettingsProps) {
                 }
                 className={`select-none relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   contactReminderEnabled
-                    ? "bg-white dark:bg-white"
+                    ? "bg-zinc-900 dark:bg-white"
                     : "bg-zinc-200 dark:bg-zinc-700"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
                     contactReminderEnabled
-                      ? "translate-x-6 bg-zinc-900 dark:bg-zinc-950"
+                      ? "translate-x-6 bg-white dark:bg-zinc-950"
                       : "translate-x-1 bg-white dark:bg-zinc-950"
                   }`}
                 />
