@@ -78,20 +78,50 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               select: { name: true, email: true, image: true },
             });
             if (dbUser) {
-              session.user.name = dbUser.name;
-              session.user.email = dbUser.email;
-              session.user.image = dbUser.image;
+              // 使用类型断言，因为我们已经在类型定义中扩展了 Session 类型
+              const user = session.user as {
+                id: string;
+                email?: string | null;
+                name?: string | null;
+                image?: string | null;
+              };
+              user.name = dbUser.name ?? null;
+              user.email = dbUser.email ?? null;
+              user.image = dbUser.image ?? null;
+            } else {
+              // 如果数据库中没有找到用户，使用 token 中的值
+              const user = session.user as {
+                id: string;
+                email?: string | null;
+                name?: string | null;
+                image?: string | null;
+              };
+              user.name = token.name as string | null;
+              user.email = token.email as string | null;
+              user.image = token.image as string | null;
             }
           } catch (error) {
             // 如果数据库查询失败，使用 token 中的值
-            session.user.name = token.name as string | null;
-            session.user.email = token.email as string | null;
-            session.user.image = token.image as string | null;
+            const user = session.user as {
+              id: string;
+              email?: string | null;
+              name?: string | null;
+              image?: string | null;
+            };
+            user.name = token.name as string | null;
+            user.email = token.email as string | null;
+            user.image = token.image as string | null;
           }
         } else {
-          session.user.name = token.name as string | null;
-          session.user.email = token.email as string | null;
-          session.user.image = token.image as string | null;
+          const user = session.user as {
+            id: string;
+            email?: string | null;
+            name?: string | null;
+            image?: string | null;
+          };
+          user.name = token.name as string | null;
+          user.email = token.email as string | null;
+          user.image = token.image as string | null;
         }
       }
       return session;
