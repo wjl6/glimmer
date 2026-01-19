@@ -10,6 +10,9 @@ import {
 
 const BATCH_SIZE = 100;
 
+// 连续提醒阈值：用户连续收到多少条提醒后自动关闭提醒设置（可通过环境变量配置，默认7）
+const CONSECUTIVE_REMINDER_THRESHOLD = Number(process.env.CONSECUTIVE_REMINDER_THRESHOLD) || 7;
+
 interface UserWithRelations {
   id: bigint;
   email: string | null;
@@ -138,6 +141,85 @@ async function fetchTodayReminders(userIds: bigint[], todayStart: Date): Promise
   }
 
   return reminderMap;
+}
+
+/**
+ * 检查用户是否连续收到指定数量的提醒
+ * 查询用户最近收到的提醒记录（包括用户自己和紧急联系人收到的），
+ * 如果最近的指定数量条记录都是提醒（没有签到记录打断），则返回true
+ * @param userId 用户ID
+ * @param currentReminderCount 当前这次发送的提醒数量（还未保存到数据库）
+ * @param threshold 连续提醒阈值，默认使用全局配置值
+ */
+async function hasConsecutiveReminders(
+  userId: bigint,
+  currentReminderCount: number = 0,
+  threshold: number = CONSECUTIVE_REMINDER_THRESHOLD
+): Promise<boolean> {
+  // 查询用户最近收到的提醒记录（包括 self 和 contact 类型，按时间倒序）
+  // 查询数量设为阈值+3，以确保有足够的数据判断
+  const recentReminders = await db.notificationLog.findMany({
+    where: {
+      userId: userId,
+      status: "sent",
+      type: { in: ["self", "contact"] }, // 包括用户自己和紧急联系人收到的提醒
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: threshold + 3, // 查询足够多的记录以确保有足够的数据判断
+    select: {
+      createdAt: true,
+      type: true,
+    },
+  });
+
+  // 计算总提醒数量：数据库中的记录 + 当前这次发送的提醒
+  const totalReminderCount = recentReminders.length + currentReminderCount;
+
+  // 如果总提醒记录少于阈值，不满足条件
+  if (totalReminderCount < threshold) {
+    return false;
+  }
+
+  // 获取用户最后一次签到的时间
+  const lastCheckIn = await db.checkIn.findFirst({
+    where: {
+      userId: userId,
+    },
+    orderBy: {
+      date: "desc",
+    },
+    select: {
+      date: true,
+    },
+  });
+
+  // 取最近的阈值条提醒（如果数据库中的记录加上当前这次发送的提醒达到阈值）
+  // 我们需要确保数据库中有足够的记录，或者数据库中的记录 + 当前这次发送的提醒 >= 阈值
+  const neededFromDb = Math.max(0, threshold - currentReminderCount);
+  
+  if (neededFromDb > 0 && recentReminders.length < neededFromDb) {
+    return false;
+  }
+
+  // 取数据库中最近的记录（需要确保至少有 neededFromDb 条）
+  const latestRemindersFromDb = recentReminders.slice(0, neededFromDb);
+
+  // 如果最后一次签到存在，检查是否在最近的提醒之后
+  // 如果最后一次签到在最近的提醒之后，说明有签到记录打断了提醒，不满足连续条件
+  if (lastCheckIn && latestRemindersFromDb.length > 0) {
+    const lastCheckInTime = normalizeDateToUTC(lastCheckIn.date);
+    const oldestReminderTime = latestRemindersFromDb[latestRemindersFromDb.length - 1].createdAt;
+
+    // 如果最后一次签到在最近的提醒之后，说明有签到记录打断了提醒
+    if (lastCheckInTime > oldestReminderTime) {
+      return false;
+    }
+  }
+
+  // 如果满足以上条件，认为用户连续收到了指定数量的提醒
+  return true;
 }
 
 function calculateDaysSinceLastCheckIn(
@@ -370,21 +452,32 @@ async function batchCreateNotificationLogs(
   }
 
   try {
-    await db.notificationLog.createMany({
+    const result = await db.notificationLog.createMany({
       data: logs,
       skipDuplicates: true,
     });
+    console.log(`成功创建 ${result.count} 条通知日志（期望 ${logs.length} 条）`);
+    if (result.count < logs.length) {
+      console.warn(`警告: 只创建了 ${result.count} 条，期望 ${logs.length} 条`);
+    }
   } catch (error) {
     console.error("批量创建通知日志失败:", error);
+    console.error("错误详情:", error instanceof Error ? error.stack : String(error));
+    // 批量创建失败时，尝试逐个创建
+    let successCount = 0;
+    let failCount = 0;
     for (const log of logs) {
       try {
         await db.notificationLog.create({
           data: log,
         });
+        successCount++;
       } catch (singleError) {
-        console.error(`创建单个通知日志失败 (userId: ${log.userId}, type: ${log.type}):`, singleError);
+        failCount++;
+        console.error(`创建单个通知日志失败 (userId: ${log.userId}, type: ${log.type}, recipient: ${log.recipientEmail}):`, singleError);
       }
     }
+    console.log(`逐个创建日志结果: 成功 ${successCount} 条, 失败 ${failCount} 条`);
   }
 }
 
@@ -430,6 +523,9 @@ export async function checkInactivityAndRemind() {
       recipientEmail: string;
     }> = [];
 
+    // 记录需要关闭提醒的用户 ID
+    const usersToDisable: bigint[] = [];
+
     for (const user of validUsers) {
       try {
         const userIdStr = user.id.toString();
@@ -445,6 +541,8 @@ export async function checkInactivityAndRemind() {
         // 使用 UTC 时区的今天作为基准
         const todayUTC = getTodayStartUTC();
 
+        let reminderSent = false;
+
         // 分别处理自我提醒
         if (selfReminderEnabled && !todayReminders.self) {
           // 计算自我提醒的阈值日期（UTC 时区）
@@ -456,7 +554,7 @@ export async function checkInactivityAndRemind() {
           const isSelfInactive = !normalizedLastCheckIn || normalizedLastCheckIn <= selfCheckDate;
 
           if (isSelfInactive) {
-            const daysSinceLastCheckIn = calculateDaysSinceLastCheckIn(
+            const selfDaysSince = calculateDaysSinceLastCheckIn(
               lastCheckIn,
               now,
               selfReminderDays
@@ -465,9 +563,14 @@ export async function checkInactivityAndRemind() {
             const selfLogs = await processSelfReminder(
               user,
               lastCheckIn,
-              daysSinceLastCheckIn
+              selfDaysSince
             );
             notificationLogs.push(...selfLogs);
+
+            // 如果成功发送了提醒（基于邮件发送结果，而非日志创建结果），标记为已发送
+            if (selfLogs.length > 0 && selfLogs.some(log => log.status === "sent")) {
+              reminderSent = true;
+            }
           }
         }
 
@@ -482,7 +585,7 @@ export async function checkInactivityAndRemind() {
           const isContactInactive = !normalizedLastCheckIn || normalizedLastCheckIn <= contactCheckDate;
 
           if (isContactInactive) {
-            const daysSinceLastCheckIn = calculateDaysSinceLastCheckIn(
+            const contactDaysSince = calculateDaysSinceLastCheckIn(
               lastCheckIn,
               now,
               contactReminderDays
@@ -491,9 +594,28 @@ export async function checkInactivityAndRemind() {
             const contactLogs = await processContactReminder(
               user,
               lastCheckIn,
-              daysSinceLastCheckIn
+              contactDaysSince
             );
             notificationLogs.push(...contactLogs);
+
+            // 如果成功发送了提醒（基于邮件发送结果，而非日志创建结果），标记为已发送
+            if (contactLogs.length > 0 && contactLogs.some(log => log.status === "sent")) {
+              reminderSent = true;
+            }
+          }
+        }
+
+        // 如果已发送提醒，检查是否连续收到指定数量的提醒
+        if (reminderSent) {
+          // 计算当前这次发送的提醒数量（还未保存到数据库）
+          const currentReminderCount = notificationLogs.filter(
+            log => log.userId === user.id && log.status === "sent"
+          ).length;
+          
+          const hasConsecutive = await hasConsecutiveReminders(user.id, currentReminderCount);
+          if (hasConsecutive) {
+            usersToDisable.push(user.id);
+            console.log(`用户 ${user.id} (${user.email}) 已连续收到 ${CONSECUTIVE_REMINDER_THRESHOLD} 条提醒（包括当前这次发送的 ${currentReminderCount} 条），将关闭提醒设置`);
           }
         }
       } catch (error) {
@@ -501,8 +623,30 @@ export async function checkInactivityAndRemind() {
       }
     }
 
+    // 先保存日志，再关闭提醒设置（确保日志记录完整）
     if (notificationLogs.length > 0) {
       await batchCreateNotificationLogs(notificationLogs);
+    }
+
+    // 关闭已放弃用户的提醒设置（连续收到7条提醒后）
+    if (usersToDisable.length > 0) {
+      try {
+        const updateResult = await db.reminderSettings.updateMany({
+          where: {
+            userId: { in: usersToDisable },
+          },
+          data: {
+            enabled: false,
+          },
+        });
+        console.log(`已关闭 ${updateResult.count} 个用户的提醒设置（连续收到 ${CONSECUTIVE_REMINDER_THRESHOLD} 条提醒）`);
+        if (updateResult.count !== usersToDisable.length) {
+          console.warn(`警告: 期望关闭 ${usersToDisable.length} 个用户，实际关闭 ${updateResult.count} 个`);
+        }
+      } catch (error) {
+        console.error("关闭提醒设置失败:", error);
+        console.error("错误详情:", error instanceof Error ? error.stack : String(error));
+      }
     }
 
     skip += BATCH_SIZE;
